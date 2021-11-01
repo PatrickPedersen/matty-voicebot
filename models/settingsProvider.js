@@ -1,14 +1,15 @@
 const Sequelize = require('sequelize');
 const database = require('../util/database');
 const Guild = require('./guild');
-const FriendCodes = require('./friendCodes');
+const FriendCodes = require('./friendCode');
 
 // noinspection JSUnresolvedFunction
 class SettingsProvider {
     async init(bot) {
         this.bot = bot;
 
-        Guild.hasMany(FriendCodes);
+        Guild.hasMany(FriendCodes, { as: 'friendCodes'})
+        FriendCodes.belongsTo(Guild, { foreignKey: 'guildId', as: 'guild'})
 
         //database.sync({force: true}).catch(err => console.log(err))
         //database.sync().catch(err => console.log(err))
@@ -46,7 +47,21 @@ class SettingsProvider {
                 .then(result => result.getDataValue(key))
                 .catch(err => this.bot.logger.error(err.stack))
         }
-    };
+    }
+
+    async createFriendCode(guildId, userId, codeName, codeValue) {
+        return FriendCodes.create({
+            user_id: userId,
+            code_name: codeName,
+            code_value: codeValue,
+            guildId: guildId
+        })
+        .then((friendcode => {
+            console.log(">> Created FriendCode: " + JSON.stringify(friendcode, null, 4))
+            return friendcode
+        }))
+        .catch(err => this.bot.logger.error(err.stack))
+    }
 }
 
 module.exports = SettingsProvider;

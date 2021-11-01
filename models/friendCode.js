@@ -1,9 +1,10 @@
 const Sequelize = require('sequelize');
 const database = require('../util/database');
 
-const FriendCodes = database.define('friendcodes', {
-    code_id: {
-        type: Sequelize.STRING,
+const FriendCode = database.define('friendcodes', {
+    id: {
+        type: Sequelize.INTEGER,
+        autoIncrement: true,
         allowNull: false,
         primaryKey: true
     },
@@ -21,4 +22,4 @@ const FriendCodes = database.define('friendcodes', {
     }
 });
 
-module.exports = FriendCodes;
+module.exports = FriendCode;
