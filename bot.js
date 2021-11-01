@@ -1,6 +1,12 @@
 const { Client, Collection, Intents } = require('discord.js')
+const winston = require('winston')
+const SettingsProvider = require('./models/settingsProvider')
+const settings = require('./settings.json')
 const fs = require('fs')
-require('dotenv').config()
+
+if (settings.NODE_ENV !== 'production') {
+    require('dotenv').config()
+}
 
 const bot = new Client({
     intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES],
@@ -14,6 +20,19 @@ const bot = new Client({
 })
 
 bot.channelNumber = 1
+
+bot.logger = winston.createLogger({
+    transports: [
+        new winston.transports.File({ filename: 'log.log' })
+    ],
+    format: winston.format.printf((log) => `[${new Date().toLocaleString()}] - [${log.level.toUpperCase()}] - ${log.message}`)
+});
+
+if (settings.NODE_ENV !== 'production') {
+    bot.logger.add(new winston.transports.Console({
+        format: winston.format.simple()
+    }));
+}
 
 bot.commands = new Collection()
 const commandFiles = fs.readdirSync('./commands').filter(file => file.endsWith('.js'))
@@ -36,3 +55,5 @@ for (const file of eventFiles) {
 
 bot.login(process.env.TOKEN)
     .catch(err => console.error(err.stack))
+
+bot.settingsProvider = new SettingsProvider()

@@ -9,5 +9,6 @@ module.exports = {
         cronJobs.midnight(bot).start()
         console.log('- [CRONJOB] - Cron job every midnight')
 
+        bot.settingsProvider.init(bot)
     }
 }
