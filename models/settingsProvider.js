@@ -1,15 +1,14 @@
-const Sequelize = require('sequelize');
 const database = require('../util/database');
 const Guild = require('./guild');
-const FriendCodes = require('./friendCode');
+const FriendCode = require('./friendCode');
 
 // noinspection JSUnresolvedFunction
 class SettingsProvider {
     async init(bot) {
         this.bot = bot;
 
-        Guild.hasMany(FriendCodes, { as: 'friendCodes'})
-        FriendCodes.belongsTo(Guild, { foreignKey: 'guildId', as: 'guild'})
+        Guild.hasMany(FriendCode, { as: 'friendCodes'})
+        FriendCode.belongsTo(Guild, { foreignKey: 'guildId', as: 'guild'})
 
         //database.sync({force: true}).catch(err => console.log(err))
         //database.sync().catch(err => console.log(err))
@@ -50,17 +49,46 @@ class SettingsProvider {
     }
 
     async createFriendCode(guildId, userId, codeName, codeValue) {
-        return FriendCodes.create({
+        return FriendCode.create({
             user_id: userId,
             code_name: codeName,
             code_value: codeValue,
             guildId: guildId
         })
-        .then((friendcode => {
-            console.log(">> Created FriendCode: " + JSON.stringify(friendcode, null, 4))
-            return friendcode
+        .then((friendCode => {
+            console.log(">> Created FriendCode: " + JSON.stringify(friendCode, null, 4))
+            return friendCode
         }))
         .catch(err => this.bot.logger.error(err.stack))
+    }
+
+    async fetchFriendCode(guildId, userId, codeName, all = false) {
+        if (all === false) {
+            return FriendCode.findOne({
+                where: {
+                    user_id: userId,
+                    code_name: codeName,
+                    guildId: guildId
+                }
+            }).catch(err => this.bot.logger.error(err.stack))
+        } else {
+            return FriendCode.findAll({
+                where: {
+                    user_id: userId,
+                    guildId: guildId
+                }
+            }).catch(err => this.bot.logger.error(err.stack))
+        }
+    }
+
+    async updateFriendCode(friendCodeId, codeValue) {
+        await FriendCode.update({
+            code_value: codeValue
+        }, {
+            where: {
+                id: friendCodeId
+            }
+        }).catch(err => this.bot.logger.error(err.stack))
     }
 }
 

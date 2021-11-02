@@ -2,6 +2,7 @@ const { SlashCommandBuilder } = require('@discordjs/builders')
 const { MessageEmbed } = require('discord.js')
 
 module.exports = {
+    cooldown: 10,
     data: new SlashCommandBuilder()
         .setName('team')
         .setDescription('Vennekoder for alle i stemme kanalen'),
@@ -9,21 +10,82 @@ module.exports = {
     async execute(interaction, bot) {
         await interaction.deferReply()
 
-        let guild = await bot.guilds.fetch(interaction.guildId)
+        const guild = await bot.guilds.fetch(interaction.guildId)
+        const user = await guild.members.fetch(interaction.user.id)
+
+        if (user.voice.channelId === null) {
+            await interaction.editReply({ content: 'Du skal være i en voice kanal for at bruge denne command' })
+                .then(reply => setTimeout(() => reply.delete(), 5000))
+            return
+        }
+
+        const voiceChannelMembers = (await guild.channels.fetch(user.voice.channelId)).members.map(member => member.user)
+        const members = []
+
+        for (let member of voiceChannelMembers) {
+            let data = await guild.members.fetch(member.id)
+            let dbData = await bot.settingsProvider.fetchFriendCode(guild.id, member.id, null, true)
+
+            if (dbData !== []) {
+                let dbDataFormatted = dbData.map(code => code.dataValues)
+                let obj = {
+                    user: {
+                        id: data.user.id,
+                        username: data.user.username,
+                        discriminator: data.user.discriminator,
+                        nickname: data.nickname,
+                    },
+                    codes: []
+                }
+                if (dbDataFormatted.find(code => code.code_name === "main")) {
+                    const main = dbDataFormatted.find(code => code.code_name === "main")
+                    obj.codes.push({
+                        main: {
+                            codeName: main.code_name,
+                            codeValue: main.code_value
+                        }
+                    })
+                }
+                if (dbDataFormatted.find(code => code.code_name === "smurf")) {
+                    const smurf = dbDataFormatted.find(code => code.code_name === "smurf")
+                    obj.codes.push({
+                        smurf: {
+                            codeName: smurf.code_name,
+                            codeValue: smurf.code_value
+                        }
+                    })
+                }
+                members.push(obj)
+            } else {
+                let obj = {
+                    user: {
+                        id: data.user.id,
+                        username: data.user.username,
+                        discriminator: data.user.discriminator,
+                        nickname: data.nickname,
+                    },
+                    codes: []
+                }
+                members.push(obj)
+            }
+        }
 
         let embed = new MessageEmbed()
             .setAuthor(`${guild.name}`, guild.iconURL())
-            .setDescription('Vennekoder for alle spillere i kanal: {KanalNavn}')
-            .addFields(
-                { name: '{Spiller 1}', value: '{Kode 1}'},
-                { name: '{Spiller 2}', value: '{Kode 2}'},
-                { name: '{Spiller 3}', value: '{Kode 3}'},
-                { name: '{Spiller 4}', value: '{Kode 4}'},
-                { name: '{Spiller 5}', value: '{Kode 5}'}
-            )
+            .setDescription(`Vennekoder for alle spillere i kanal: ${user.voice.channel.name}`)
             .setTimestamp()
             .setFooter(`${bot.user.username}`, `${bot.user.displayAvatarURL()}`)
-        
-        await interaction.editReply({ embeds: [embed] })
+
+        members.map(member => {
+            let string
+            if (member.codes.length > 1) {
+                string = `\`\`Main:\`\` ${member.codes[0].main.codeValue} \`\`Smurf:\`\` ${member.codes[1].smurf.codeValue}`
+            } else {
+                string = `\`\`Main:\`\` ${member.codes[0] ? member.codes[0].main.codeValue : 'Ingen kode'}`
+            }
+            embed.addField(`${member.user.nickname ? member.user.nickname : member.user.username}`, string)
+        })
+
+        await interaction.editReply({ content: `<@${interaction.user.id}>`, embeds: [embed]})
     }
 }

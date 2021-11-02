@@ -23,7 +23,7 @@ bot.channelNumber = 1
 
 bot.logger = winston.createLogger({
     transports: [
-        new winston.transports.File({ filename: 'log.log' })
+        new winston.transports.File({ filename: 'XCS_bot.log' })
     ],
     format: winston.format.printf((log) => `[${new Date().toLocaleString()}] - [${log.level.toUpperCase()}] - ${log.message}`)
 });

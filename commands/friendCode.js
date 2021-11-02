@@ -1,38 +1,18 @@
 const { SlashCommandBuilder } = require('@discordjs/builders')
-const { MessageEmbed } = require('discord.js')
+const {MessageEmbed} = require("discord.js");
 
 module.exports = {
-    cooldown: 10,
     data: new SlashCommandBuilder()
-        .setName('tag')
-        .setDescription('Sætter ens vennekoder (Main og Smurf)')
-        .addStringOption(option =>
-            option.setName('konto')
-                .setDescription('description')
-                .setRequired(true)
-                .addChoice('Main','main')
-                .addChoice('Smurf', 'smurf'))
-        .addStringOption(option =>
-            option.setName('kode')
-                .setDescription('Skriv din vennekode')
-                .setRequired(true)),
+        .setName('vennekode')
+        .setDescription('Vennekode Kommandoer')
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('vis')
+                .setDescription('Viser ens vennekoder')
+        ),
 
     async execute(interaction, bot) {
         await interaction.deferReply()
-
-        const account = interaction.options.getString('konto');
-        const code = interaction.options.getString('kode')
-
-        const codes_if_exist = await bot.settingsProvider.fetchFriendCode(interaction.guild.id, interaction.user.id, account)
-
-        if (codes_if_exist) {
-            const data = codes_if_exist.dataValues
-            if (data.code_name !== account) return await interaction.editReply({ content: "Encountered an error, please contact staff." })
-            await bot.settingsProvider.updateFriendCode(data.id, code)
-        } else {
-            await bot.settingsProvider.createFriendCode(interaction.guild.id, interaction.user.id, account, code)
-                .catch(err => bot.logger.error(err.stack))
-        }
 
         let user = await bot.users.fetch(interaction.user.id)
 
