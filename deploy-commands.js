@@ -21,10 +21,17 @@ const rest = new REST({ version: 9}).setToken(process.env.TOKEN);
     try {
         console.log('Started refreshing application (/) commands.')
 
+        // Use to register slash commands in a specific guild.
         await rest.put(
             Routes.applicationGuildCommands(clientId, guildId),
             { body: commands },
         )
+
+        // Use to register slash commands in all guilds.
+        // await rest.put(
+        //     Routes.applicationCommands(clientId),
+        //     { body: commands },
+        // )
 
         console.log('Successfully reloaded application (/) commands.')
     } catch (err) {
