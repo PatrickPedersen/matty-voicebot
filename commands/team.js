@@ -1,5 +1,6 @@
 const { SlashCommandBuilder } = require('@discordjs/builders')
 const { MessageEmbed } = require('discord.js')
+const { vennekodeKanalId } = require('../settings.json')
 
 module.exports = {
     cooldown: 10,
@@ -8,13 +9,20 @@ module.exports = {
         .setDescription('Vennekoder for alle i stemme kanalen'),
 
     async execute(interaction, bot) {
+
+        if (interaction.channelId !== vennekodeKanalId) {
+            await interaction.reply({ content: `Denne kommand virker kun i <#${vennekodeKanalId}>` })
+            setTimeout(() => interaction.deleteReply(), 5000)
+            return;
+        }
+
         await interaction.deferReply()
 
         const guild = await bot.guilds.fetch(interaction.guildId)
         const user = await guild.members.fetch(interaction.user.id)
 
         if (user.voice.channelId === null) {
-            await interaction.editReply({ content: 'Du skal være i en voice kanal for at bruge denne command' })
+            await interaction.editReply({ content: 'Du skal være i en voice kanal for at bruge denne kommand' })
                 .then(reply => setTimeout(() => reply.delete(), 5000))
             return
         }
