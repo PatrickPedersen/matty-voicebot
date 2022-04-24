@@ -8,23 +8,32 @@ module.exports = {
         .setName('team')
         .setDescription('Vennekoder for alle i stemme kanalen'),
 
-    async execute(interaction, bot) {
+    async execute(bot, interaction, message) {
+        let channelId = interaction ? interaction.channelId : message.channel.id
 
-        if (interaction.channelId !== vennekodeKanalId) {
-            await interaction.reply({ content: `Denne kommand virker kun i <#${vennekodeKanalId}>` })
-            setTimeout(() => interaction.deleteReply(), 5000)
+        if (channelId !== vennekodeKanalId) {
+            const phrase = `This command only works in channel <#${vennekodeKanalId}>`
+            // Ternary Operation. If Interaction exists continue with interaction reply otherwise continue with message reply.
+            interaction ? await interaction.reply({ content: phrase }) : await message.channel.send(phrase)
+            if (interaction) setTimeout(() => interaction.deleteReply(), 5000)
             return;
         }
 
-        await interaction.deferReply()
+        if (interaction) await interaction.deferReply()
 
-        const guild = await bot.guilds.fetch(interaction.guildId)
-        const user = await guild.members.fetch(interaction.user.id)
+        const guild = await bot.guilds.fetch(interaction ? interaction.guildId : message.guildId)
+        const user = await guild.members.fetch(interaction ? interaction.user.id : message.author.id)
 
         if (user.voice.channelId === null) {
-            await interaction.editReply({ content: 'Du skal være i en voice kanal for at bruge denne kommand' })
-                .then(reply => setTimeout(() => reply.delete(), 5000))
-            return
+            if (interaction) {
+                return await interaction.editReply({ content: 'Du skal være i en voice kanal for at bruge denne kommand' })
+                    .then(reply => setTimeout(() => reply.delete(), 5000))
+            }
+            if (message) {
+                await message.channel.send('You need to be in a voice channel to use this command')
+                    .then(m => setTimeout(() => m.delete(), 5000))
+                return message.delete()
+            }
         }
 
         const voiceChannelMembers = (await guild.channels.fetch(user.voice.channelId)).members.map(member => member.user)
@@ -79,10 +88,10 @@ module.exports = {
         }
 
         let embed = new MessageEmbed()
-            .setAuthor(`${guild.name}`, guild.iconURL())
-            .setDescription(`Vennekoder for alle spillere i kanal: ${user.voice.channel.name}`)
+            .setAuthor({ name: guild.name, iconURL: guild.iconURL()})
+            .setDescription(`Friend codes for all players in channel: ${user.voice.channel.name}`)
             .setTimestamp()
-            .setFooter(`${bot.user.username}`, `${bot.user.displayAvatarURL()}`)
+            .setFooter({ text: bot.user.username, iconURL: `${bot.user.displayAvatarURL()}`})
 
         members.map(member => {
             let string
@@ -91,9 +100,15 @@ module.exports = {
             } else {
                 string = `\`\`Main:\`\` ${member.codes[0] ? member.codes[0].main.codeValue : 'Ingen kode'}`
             }
-            embed.addField(`${member.user.nickname ? member.user.nickname : member.user.username}`, string)
+            embed.addField(member.user.nickname ? member.user.nickname : member.user.username, string)
         })
 
-        await interaction.editReply({ content: `<@${interaction.user.id}>`, embeds: [embed]})
+        interaction ? await interaction.editReply({
+            content: `<@${interaction ? interaction.user.id : message.author.id}>`,
+            embeds: [embed]
+        }) : await message.channel.send({
+            content: `<@${interaction ? interaction.user.id : message.author.id}>`,
+            embeds: [embed]
+        })
     }
 }

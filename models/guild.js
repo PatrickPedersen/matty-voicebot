@@ -7,6 +7,11 @@ const Guild = database.define('guild', {
         allowNull: false,
         primaryKey: true
     },
+    prefix: {
+        type: Sequelize.STRING,
+        allowNull: false,
+        defaultValue: '!'
+    },
     log: {
         type: Sequelize.BOOLEAN,
         defaultValue: false,

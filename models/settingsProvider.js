@@ -21,7 +21,6 @@ class SettingsProvider {
             process.exit(-1);
         }
 
-
         for (const guild in this.bot.guilds.cache.map(guild => guild)) {
             try {
                 const result = await Guild.findByPk(this.bot.guilds.cache.map(guild => guild)[guild].id)
@@ -46,6 +45,15 @@ class SettingsProvider {
                 .then(result => result.getDataValue(key))
                 .catch(err => this.bot.logger.error(err.stack))
         }
+    }
+
+    async setPrefix(guildId, prefix) {
+        return Guild.findByPk(guildId)
+            .then(result => {
+                return result.update({
+                    prefix: prefix
+                })
+            }).catch(err => this.bot.logger.error(err.stack))
     }
 
     async createFriendCode(guildId, userId, codeName, codeValue) {

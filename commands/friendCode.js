@@ -1,3 +1,5 @@
+// noinspection DuplicatedCode
+
 const { SlashCommandBuilder } = require('@discordjs/builders')
 const {MessageEmbed} = require("discord.js");
 
@@ -11,18 +13,18 @@ module.exports = {
                 .setDescription('Viser ens vennekoder')
         ),
 
-    async execute(interaction, bot) {
-        await interaction.deferReply()
+    async execute(bot, interaction, message) {
+        if (interaction) await interaction.deferReply()
 
-        let user = await bot.users.fetch(interaction.user.id)
+        let user = await bot.users.fetch(interaction ? interaction.user.id : message.author.id)
+        let allCodesRaw = await bot.settingsProvider.fetchFriendCode(interaction ? interaction.guild.id : message.guildId, interaction ? interaction.user.id : message.author.id, null, true)
 
         let embed = new MessageEmbed()
-            .setAuthor(`${user.username}`, user.displayAvatarURL())
+            .setAuthor({ name: user.username, iconURL: user.displayAvatarURL() })
             .setDescription('Dine vennekoder')
             .setTimestamp()
-            .setFooter(`${bot.user.username}`, `${bot.user.displayAvatarURL()}`)
+            .setFooter({ text: bot.user.username, iconURL: bot.user.displayAvatarURL() })
 
-        const allCodesRaw = await bot.settingsProvider.fetchFriendCode(interaction.guild.id, interaction.user.id, null, true)
         const allCodesFormatted = allCodesRaw.map(code => code.dataValues)
 
         if (allCodesFormatted.find(code => code.code_name === "main")) {
@@ -34,6 +36,12 @@ module.exports = {
             embed.addField("Smurf:", `${ smurf.code_value ? smurf.code_value : "Ingen code" }`)
         }
 
-        await interaction.editReply({ embeds: [embed] })
+        if (interaction) {
+            await interaction.editReply({ embeds: [embed] })
+        }
+
+        if (message) {
+            message.channel.send({ embeds: [embed] })
+        }
     }
 }

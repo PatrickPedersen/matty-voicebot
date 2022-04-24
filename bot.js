@@ -9,7 +9,7 @@ if (settings.NODE_ENV !== 'production') {
 }
 
 const bot = new Client({
-    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES],
+    intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_VOICE_STATES, Intents.FLAGS.GUILD_MESSAGES],
     presence: {
         activities: [{
             name: 'https://discord.gg/7CSpQap9wj',
@@ -20,6 +20,7 @@ const bot = new Client({
 })
 
 bot.channelNumber = 1
+bot.cooldowns = new Map()
 
 bot.logger = winston.createLogger({
     transports: [

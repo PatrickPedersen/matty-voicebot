@@ -8,9 +8,9 @@
   "settings_clientId": "903638007448481862",
   "settings_guildId": "903601842213249044",
 
-  "DB_NAME": "xcs_gaming",
+  "DB_NAME": "s508_xcs_gaming",
   "DB_USER": "xcs_gaming",
   "DB_PASS": "xcs_gaming",
-  "DB_HOST": "192.168.1.60",
-  "DB_PORT": "3306"
+  "DB_HOST": "localhost",
+  "DB_PORT": "3301"
 }
