@@ -1,6 +1,6 @@
 {
   "name": "matty-voicebot",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "VoiceBot",
   "main": "bot.js",
   "scripts": {
